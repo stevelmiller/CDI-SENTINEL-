@@ -1,16 +1,6 @@
-Conversation opened. 1 read message.
-
-Skip to content
-Using Gmail with screen readers
-1 of 12,104
-CDI-SENTINEL
-Inbox
-
-Steve <taznst3v32024@gmail.com>
-9:03 PM (12 minutes ago)
-to me
-
-
+import os
+from datetime import datetime
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
@@ -116,7 +106,7 @@ def apply_constraints(user_text: str) -> dict:
 @app.route("/sentinel", methods=["POST"])
 def sentinel():
     data = request.get_json(force=True, silent=True) or {}
-    user_text = data.get("text", "")
+    user_text = data.get("prompt", "")
 
     constraints = apply_constraints(user_text)
 
@@ -134,4 +124,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8000"))
     app.run(host="0.0.0.0", port=port)
 
-Steven L Miller
