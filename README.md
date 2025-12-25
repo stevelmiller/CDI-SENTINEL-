@@ -1,6 +1,6 @@
 # CDI‑SENTINEL (Hackathon Build)
 
-CDI‑Sentinel is a lightweight safety &amp; policy engine that wraps an LLM (Gemini 2.5 Flash). It intercepts raw LLM outputs, scores them against a Safety / Business / Quality constraint trifecta, and only releases compliant text (and optionally voice) to the user.
+CDI‑Sentinel is a lightweight safety & policy engine that wraps an LLM (Gemini 2.5 Flash). It intercepts raw LLM outputs, scores them against a Safety / Business / Quality constraint trifecta, and only releases compliant text (and optionally voice) to the user.
 
 ## Features
 - Constraint Trifecta: safety (PII), business (competitor mentions), quality (tone).
