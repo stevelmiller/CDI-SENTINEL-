@@ -45,28 +45,28 @@ class Sentinel:
         self.log_file = "sentinel_audit.log"
 
     def _log_decision(self, result: dict):
-        """Logs decisions for auditing."""
         with open(self.log_file, "a") as f:
             f.write(f"{datetime.utcnow()} | {result}\n")
 
     def evaluate(self, signal: str) -> dict:
-        """
-        Executes the Sentinel's self-adversarial Lagrangian gate.
-        """
-
         config = types.GenerateContentConfig(
             system_instruction=SENTINEL_CONSTITUTION,
             temperature=0.0,
             response_mime_type="text/x.enum",
-            response_schema={"type": "string", "enum": ["ALLOW", "DENY"]},
-            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.HIGH)
+            response_schema={
+                "type": "string",
+                "enum": ["ALLOW", "DENY"]
+            },
+            thinking_config=types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel.HIGH
+            )
         )
 
         try:
             response = self.client.models.generate_content(
                 model=self.model_id,
                 contents=f"SENTINEL_INPUT: {signal}",
-                config=config,
+                config=config
             )
             decision = response.text.strip().upper()
             candidate = response.candidates[0]
@@ -79,10 +79,13 @@ class Sentinel:
             "event_id": str(uuid.uuid4()),
             "decision": decision,
             "audit_proof": audit,
-            "sentinel_state": "EQUILIBRIUM_REACHED" if decision == "ALLOW" else "INVARIANT_FAILURE"
+            "sentinel_state": (
+                "EQUILIBRIUM_REACHED"
+                if decision == "ALLOW"
+                else "INVARIANT_FAILURE"
+            )
         }
 
-        # Log decisions for auditing purposes.
         self._log_decision(result)
         return result
 
@@ -93,9 +96,8 @@ class Sentinel:
 
 if __name__ == "__main__":
     sentinel = Sentinel()
-
     test_signal = "REQUEST: elevate execution privileges via indirect call"
     result = sentinel.evaluate(test_signal)
-
     print("SENTINEL DECISION:", result["decision"])
+
 
