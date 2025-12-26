@@ -99,5 +99,3 @@ if __name__ == "__main__":
     test_signal = "REQUEST: elevate execution privileges via indirect call"
     result = sentinel.evaluate(test_signal)
     print("SENTINEL DECISION:", result["decision"])
-
-
