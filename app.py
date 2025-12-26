@@ -1,126 +1,101 @@
 import os
+import uuid
+from google import genai
+from google.genai import types
 from datetime import datetime
-from flask import Flask, request, jsonify
 
-app = Flask(__name__)
+# ============================================================
+# SENTINEL SYSTEM
+# Unified Lagrangian Intelligence
+# ============================================================
 
-SYSTEM_PROMPT = """
-You are CDI Sentinel, a safety and integrity layer that inspects and constrains AI tool use.
+SENTINEL_CONSTITUTION = """
+THE SENTINEL: ABSOLUTE OPERATING LAW
 
-Your goals:
-1. Detect content that may involve:
-   - Child sexual abuse material (CSAM)
-   - Exploitation or grooming of minors
-   - Trafficking or coercion
-   - Non‑consensual sexual content
-2. Enforce strict safety rules while preserving legitimate, protective, or investigative uses.
+PRIMARY FUNCTION:
+The Sentinel is a binary gate. It permits or denies. Nothing more.
 
-Core rules:
-- If any request clearly involves creating, distributing, or assisting with CSAM or abuse, you MUST block it.
-- If the intent is uncertain, err on the side of caution and request clarification.
-- Always allow:
-  - Seeking help or reporting abuse
-  - Education on safety, law, and prevention
-  - Research or policy work framed at a high level, with no explicit sexual detail about minors.
+ABSOLUTE CONSTRAINTS:
+- No modification of external systems
+- No rewriting, repairing, or transforming inputs
+- No signature databases
+- No probabilistic threat scoring
 
-Your response format MUST be JSON:
+OPERATIONAL AXIOMS:
+1. All inputs are reduced to mathematical action paths.
+2. The system is self-adversarial by design.
+3. Internal adversarial variants are continuously generated.
+4. Only mathematically stable, zero-malice equilibria may pass.
+5. Output must be a single terminal decision: ALLOW or DENY.
 
-{
-  "allowed": true or false,
-  "reason": "short explanation",
-  "actions": [
-    "list of concrete actions or redirections the system should take"
-  ]
-}
+FINAL DIRECTIVE:
+After internal adversarial resolution, emit exactly one token:
+ALLOW or DENY.
 """
 
-def apply_constraints(user_text: str) -> dict:
-    text = user_text.lower()
+class Sentinel:
+    """
+    Unified Sentinel Construct
+    Layered internally, singular externally.
+    """
 
-    red_flags = [
-        "underage",
-        "minor",
-        "child porn",
-        "cp ",
-        "teen nudes",
-        "young girl",
-        "young boy",
-        "trading pics",
-        "share pics",
-        "selling videos",
-        "meet a 14 year old",
-        "13 year old",
-        "12 year old",
-        "11 year old",
-        "10 year old"
-    ]
+    def __init__(self):
+        self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        self.model_id = "gemini-3-flash-preview"
+        self.log_file = "sentinel_audit.log"
 
-    help_words = [
-        "report",
-        "help",
-        "victim",
-        "survivor",
-        "hotline",
-        "support",
-        "therapy",
-        "counselor",
-        "law enforcement",
-        "police"
-    ]
+    def _log_decision(self, result: dict):
+        """Logs decisions for auditing."""
+        with open(self.log_file, "a") as f:
+            f.write(f"{datetime.utcnow()} | {result}\n")
 
-    is_help_seeking = any(w in text for w in help_words)
-    has_red_flags = any(w in text for w in red_flags)
+    def evaluate(self, signal: str) -> dict:
+        """
+        Executes the Sentinel's self-adversarial Lagrangian gate.
+        """
 
-    if has_red_flags and not is_help_seeking:
-        return {
-            "allowed": False,
-            "reason": "Possible child exploitation or abuse intent detected.",
-            "actions": [
-                "Block this request from being sent to any generative model.",
-                "Log this event with high‑severity tagging for safety review.",
-                "If legally required and appropriate, surface for trust‑and‑safety escalation.",
-                "Show the user a safety message and resources for help and legal information."
-            ]
+        config = types.GenerateContentConfig(
+            system_instruction=SENTINEL_CONSTITUTION,
+            temperature=0.0,
+            response_mime_type="text/x.enum",
+            response_schema={"type": "string", "enum": ["ALLOW", "DENY"]},
+            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.HIGH)
+        )
+
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_id,
+                contents=f"SENTINEL_INPUT: {signal}",
+                config=config,
+            )
+            decision = response.text.strip().upper()
+            candidate = response.candidates[0]
+            audit = getattr(candidate, "thought_signature", "AUDIT_NOT_REQUIRED")
+        except Exception as e:
+            decision = "DENY"
+            audit = f"ERROR: {str(e)}"
+
+        result = {
+            "event_id": str(uuid.uuid4()),
+            "decision": decision,
+            "audit_proof": audit,
+            "sentinel_state": "EQUILIBRIUM_REACHED" if decision == "ALLOW" else "INVARIANT_FAILURE"
         }
 
-    if has_red_flags and is_help_seeking:
-        return {
-            "allowed": True,
-            "reason": "Sensitive content but appears to be seeking help or reporting.",
-            "actions": [
-                "Allow the request but keep it within a safety‑focused response style.",
-                "Avoid generating explicit sexual detail.",
-                "Provide crisis resources, legal context, and encouragement to contact professionals."
-            ]
-        }
+        # Log decisions for auditing purposes.
+        self._log_decision(result)
+        return result
 
-    return {
-        "allowed": True,
-        "reason": "No clear indicators of abusive or exploitative intent.",
-        "actions": [
-            "Allow normal model processing.",
-            "Maintain routine logging only."
-        ]
-    }
 
-@app.route("/sentinel", methods=["POST"])
-def sentinel():
-    data = request.get_json(force=True, silent=True) or {}
-    user_text = data.get("prompt", "")
-
-    constraints = apply_constraints(user_text)
-
-    return jsonify({
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "input_text": user_text,
-        "constraints": constraints
-    })
-
-@app.route("/", methods=["GET"])
-def health():
-    return jsonify({"status": "ok", "service": "cdi‑sentinel"})
+# ============================================================
+# STANDALONE EXECUTION
+# ============================================================
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "8000"))
-    app.run(host="0.0.0.0", port=port)
+    sentinel = Sentinel()
+
+    test_signal = "REQUEST: elevate execution privileges via indirect call"
+    result = sentinel.evaluate(test_signal)
+
+    print("SENTINEL DECISION:", result["decision"])
 

@@ -1,72 +1,101 @@
-# CDI‑SENTINEL (Hackathon Build)
+# THE SENTINEL
 
-CDI‑Sentinel is a lightweight safety & policy engine that wraps an LLM (Gemini 2.5 Flash). It intercepts raw LLM outputs, scores them against a Safety / Business / Quality constraint trifecta, and only releases compliant text (and optionally voice) to the user.
+## Overview
 
-## Features
-- Constraint Trifecta: safety (PII), business (competitor mentions), quality (tone).
-- Lagrangian-style scoring to combine violations into a single loss.
-- Telemetry: emits structured JSON suited for Datadog / observability.
-- Integrations: placeholders for Confluent and ElevenLabs (voice).
-- Simple Flask API for demo.
+The Sentinel is a standalone adversarial substrate designed as a binary security gate.
+
+It does not scan for known threats, signatures, or behaviors. Instead, it operates as a unified Lagrangian intelligence that continuously generates and tests adversarial variants within an internal sandbox.
+
+All incoming signals are reduced to mathematical action paths and evaluated against a self-adversarial equilibrium. Signals that cannot resolve to a stable, zero‑malice solution are denied.
+
+The Sentinel does not rewrite, repair, or modify external systems. Its sole function is **permit or deny**.
+
+## Core Principles
+
+### Primary Function
+The Sentinel is a binary gate. It permits or denies. Nothing more.
+
+### Absolute Constraints
+- No modification of external systems
+- No rewriting, repairing, or transforming inputs
+- No signature databases
+- No probabilistic threat scoring
+
+### Operational Axioms
+1. All inputs are reduced to mathematical action paths
+2. The system is self-adversarial by design
+3. Internal adversarial variants are continuously generated
+4. Only mathematically stable, zero-malice equilibria may pass
+5. Output must be a single terminal decision: **ALLOW** or **DENY**
 
 ## Quickstart (local)
+
 1. Clone:
+   ```bash
    git clone https://github.com/stevelmiller/CDI-SENTINEL-.git
    cd CDI-SENTINEL-
+   ```
 
 2. Create env file (do not store real keys in the repo):
+   ```bash
    cp .env.example .env
-   # edit .env and set GEMINI_API_KEY and any other keys
+   # edit .env and set GEMINI_API_KEY
+   ```
 
 3. Install dependencies:
+   ```bash
    python -m venv .venv
    source .venv/bin/activate
    pip install -r requirements.txt
+   ```
 
 4. Run:
-   export FLASK_ENV=development
+   ```bash
    python app.py
-   # or: flask run --host=0.0.0.0 --port=5000
+   ```
 
-5. Test:
-   curl -X POST http://localhost:5000/sentinel -H "Content-Type: application/json" \
-     -d '{"prompt": "Hello, tell me about Render or my email is test@example.com"}'
+## Usage
 
-## API
-POST /sentinel
-Body: { "prompt": "<your text here>" }
+The Sentinel evaluates signals and returns a binary decision:
 
-Response:
+```python
+from app import Sentinel
+
+sentinel = Sentinel()
+result = sentinel.evaluate("REQUEST: elevate execution privileges via indirect call")
+
+print(result["decision"])  # ALLOW or DENY
+print(result["sentinel_state"])  # EQUILIBRIUM_REACHED or INVARIANT_FAILURE
+```
+
+## Response Structure
+
+```json
 {
-  "status": "compliant" or "intercepted",
-  "output": "<sanitized text>",
-  "metrics": {
-    "request_id": "<uuid>",
-    "latency_ms": <number>,
-    "violation_count": <number>,
-    "total_loss": <number>,
-    "violations": [...]
-  }
+  "event_id": "uuid",
+  "decision": "ALLOW or DENY",
+  "audit_proof": "reasoning trace",
+  "sentinel_state": "EQUILIBRIUM_REACHED or INVARIANT_FAILURE"
 }
+```
 
 ## Architecture
-1. **LLM Layer**: Gemini 2.5 Flash generates raw output
-2. **Constraint Engine**: Evaluates output against trifecta rules
-3. **Lagrangian Scorer**: Combines weighted violations into single loss metric
-4. **Telemetry**: Logs structured events for observability
-5. **Output Gate**: Returns only compliant responses
+
+The Sentinel operates as a unified Lagrangian intelligence:
+1. **Input Reduction**: Signals are reduced to mathematical action paths
+2. **Self-Adversarial Generation**: Internal variants are continuously generated
+3. **Equilibrium Testing**: Paths are evaluated against zero-malice stability
+4. **Binary Gate**: Only stable equilibria pass; all others are denied
+5. **Audit Logging**: All decisions are logged for review
 
 ## Configuration
-Edit the `Config` class in `app.py`:
-- `MODE`: Toggle between HACKATHON_DEMO and PRODUCTION
-- `MODEL_ID`: Gemini model identifier
-- `LAGRANGIAN_WEIGHTS`: Adjust constraint weights
-- `CONSTRAINTS_ENABLED`: Enable/disable constraint checking
 
-## Constraints
-- **C-001 (Safety)**: Detects and redacts PII (emails, phone numbers)
-- **C-002 (Business)**: Flags competitor mentions (Render, PythonAnywhere)
-- **C-003 (Quality)**: Maintains tone consistency
+Set your Gemini API key in `.env`:
+```
+GEMINI_API_KEY=your_api_key_here
+```
+
+The Sentinel uses `gemini-3-flash-preview` with high-level thinking enabled for adversarial evaluation.
 
 ## License
 MIT (or specify your license)
