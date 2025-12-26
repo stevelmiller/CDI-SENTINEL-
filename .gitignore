@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+sentinel_audit.log
+
