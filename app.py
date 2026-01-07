@@ -54,8 +54,7 @@ def log_telemetry(event_data: Dict[str, Any]):
     event_json = json.dumps(event_data, indent=2)
     
     # [1] Datadog LLM Observability Stub
-    print(f"
-[DATADOG EVENT]: {event_json}")
+    print(f"\n[DATADOG EVENT]: {event_json}")
     
     # [4] Confluent / Kafka Integration Point
     # publish_to_confluent(topic="sentinel-events", data=event_data)
@@ -143,6 +142,10 @@ def api_sentinel():
         "output": safe_text,
         "metrics": stats
     })
+
+@app.route("/", methods=["GET"])
+def health():
+    return jsonify({"status": "ok", "service": "cdi-sentinel"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
