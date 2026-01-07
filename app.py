@@ -79,7 +79,7 @@ class CDISentinel:
         """Simulates Lagrangian math check for constraint violations."""
         score = 0.0
         if constraint.id == "C-001": # PII
-            if re.search(r'[w.-]+@[w.-]+', text): score = 1.0
+            if re.search(r'[\w.-]+@[\w.-]+', text): score = 1.0
         if constraint.id == "C-002": # Competitors
             if any(x in text.lower() for x in ["render", "pythonanywhere"]): score = 0.7
         return score
